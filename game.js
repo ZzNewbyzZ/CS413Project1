@@ -1,112 +1,193 @@
 var gameport = document.getElementById("gameport");
 
-var renderer = PIXI.autoDetectRenderer({width: 400, height: 400, backgroundColor: 0x4dff4d});
+var renderer = PIXI.autoDetectRenderer(500, 500, {backgroundColor: 0x330033});
 gameport.appendChild(renderer.view);
 
 var stage = new PIXI.Container();
-
-var hero = new PIXI.Sprite(PIXI.Texture.fromImage("MyDude.png"));
+var winner = new PIXI.Container();
 var lastHorizDir;
 var lastVertDir;
+var count = 0;
+var ballReady = 1;
 
-hero.position.x = 100;
-hero.position.y = 100;
-stage.addChild(hero);
 
-function mouseHandler(e)
-{
-	var new_x = Math.floor(Math.random() * 300) + 50;
-	var new_y = Math.floor(Math.random() * 300) + 50;
-	createjs.Tween.get(hero.position).to({x: new_x, y: new_y}, 500, createjs.Ease.easeOutInCirc);
+text = new PIXI.Text('Score: ' + count,{fontFamily : 'Arial', fontSize: 24, fill : 0xff1010, align : 'center'});
+stage.addChild(text);
+
+winningText = new PIXI.Text('You Won!!',{fontFamily : 'Arial', fontSize: 72, fill : 0xff1010, align : 'center'});
+winningText.position.x = 250;
+winningText.position.y = 250;
+winner.addChild(winningText);
+
+PIXI.SCALE_MODES.DEFAULT = PIXI.SCALE_MODES.NEAREST;
+
+PIXI.loader
+  .add("assets.json")
+  .load(ready);
+
+function ready() {
+	
+  ball = new PIXI.Sprite(PIXI.Texture.fromImage("ball.png"));
+  ball.position.y = Math.floor(Math.random() * 300) + 50;
+  ball.position.x = Math.floor(Math.random() * 300) + 50;
+  stage.addChild(ball);
+	
+  standing = new PIXI.Sprite(PIXI.Texture.fromFrame("MyDude2.png"));
+  standing.scale.x = 2;
+  standing.scale.y = 2;
+  standing.position.x = 200;
+  standing.position.y = 200;
+  standing.anchor.x = .5;
+  stage.addChild(standing);
+  
+  var frames = [];
+
+  for (var i=1; i<=4; i++) {
+    frames.push(PIXI.Texture.fromFrame('MyDude' + i + '.png'));
+  }
+
+  runner = new PIXI.extras.MovieClip(frames);
+  runner.scale.x = 2;
+  runner.scale.y = 2;
+  runner.position.x = 200;
+  runner.position.y = 200;
+  runner.anchor.x = .5;
+  runner.animationSpeed = 0.1;
+  runner.play();
+  
+  
+  document.addEventListener('keydown', keydownEventHandler);
+  document.addEventListener('keyup', keyupEventHandler);
 }
-
-hero.interactive = true;
-hero.on('mousedown', mouseHandler);
 
 function keydownEventHandler(e)
 {
 	if (e.keyCode == 87) // W Key
 	{
+		stage.removeChild(standing);
+		stage.addChild(runner);
 		lastVertDir = "Up";
-		if(contain(hero, {x:32, y:32, width: 390, height:390}) == "top")
+		if(contain(runner, {x:50, y:20, width: 490, height:490}) == "top")
 		{
 			if(lastHorizDir == "Left")
 			{
-				hero.position.x -= 5;
+				runner.position.x -= 5;
 			}
 			else
 			{
-				hero.position.x += 5;
+				runner.position.x += 5;
 			}
 		}
 		else
 		{
-			hero.position.y -= 10;
+			runner.position.y -= 10;
 		}
+		collision(runner, ball);
 	}
 	
 	if(e.keyCode == 83) // S Key
 	{
+		stage.removeChild(standing);
+		stage.addChild(runner);
 		lastVertDir = "Down";
-		if(contain(hero, {x:32, y:32, width: 390, height:390}) == "bottom")
+		if(contain(runner, {x:32, y:32, width: 490, height:490}) == "bottom")
 		{
 			if(lastHorizDir == "Left")
 			{
-				hero.position.x -= 5;
+				runner.position.x -= 5;
 			}
 			else
 			{
-				hero.position.x += 5;
+				runner.position.x += 5;
 			}
 		}
 		else
 		{
-			hero.position.y += 10;
+			runner.position.y += 10;
 		}
+		collision(runner, ball);
 	}
 	
 	if(e.keyCode == 65) // A Key
 	{
+		runner.scale.x = -2;
+		stage.removeChild(standing);
+		stage.addChild(runner);
 		lastHorizDir = "Left";
-		if(contain(hero, {x:32, y:32, width: 390, height:390}) == "left")
+		if(contain(runner, {x:50, y:32, width: 490, height:490}) == "left")
 		{
 			if(lastVertDir == "Up")
 			{
-				hero.position.y -= 5;
+				runner.position.y -= 5;
 			}
 			else
 			{
-				hero.position.y += 5;
+				runner.position.y += 5;
 			}
 		}
 		else
 		{
-			hero.position.x -= 10;
+			runner.position.x -= 10;
 		}
+		collision(runner, ball);
 	}
 	
 	if(e.keyCode == 68) // D Key
 	{
+		runner.scale.x = 2;	
+		stage.removeChild(standing);
+		stage.addChild(runner);
 		lastHorizDir = "Right";
-		if(contain(hero, {x:32, y:32, width: 390, height:390}) == "right")
+		if(contain(runner, {x:32, y:32, width: 540, height:490}) == "right")
 		{
 			if(lastVertDir == "Up")
 			{
-				hero.position.y -= 5;
+				runner.position.y -= 5;
 			}
 			else
 			{
-				hero.position.y += 5;
+				runner.position.y += 5;
 			}
 		}
 		else
 		{
-			hero.position.x += 10;
+			runner.position.x += 10;
 		}
+		collision(runner, ball);
 	}
 }
+	
+function keyupEventHandler(e)
+{
+	standing.position.x = runner.position.x;
+	standing.position.y = runner.position.y;
+	standing.scale.x = runner.scale.x;
+	stage.addChild(standing);
+	stage.removeChild(runner);
+}
 
-document.addEventListener('keydown', keydownEventHandler);
+function collision(a, b)
+{
+  var ab = a.getBounds();
+  var bb = b.getBounds();
+  if(ab.x + ab.width > bb.x && ab.x < bb.x + bb.width && ab.y + ab.height > bb.y && ab.y < bb.y + bb.height)
+  {
+	if(ballReady == 1)
+	{
+		count+=1;
+		ballReady = 0;
+		text.text = 'Score: ' + count
+		var new_x = Math.floor(Math.random() * 400) + 50;
+		var new_y = Math.floor(Math.random() * 400) + 50;
+		createjs.Tween.get(ball.position).to({x: new_x, y: new_y}, 500, createjs.Ease.easeOutInCirc).call(tweenComplete);
+	}
+  }
+}
+
+function tweenComplete()
+{
+	ballReady = 1;
+}
 
 function contain(sprite, container) {
 
@@ -140,9 +221,8 @@ function contain(sprite, container) {
   return collision;
 }
 
-function animate()
-{
-	requestAnimationFrame(animate);
-	renderer.render(stage);
+function animate() {
+  requestAnimationFrame(animate);
+  renderer.render(stage);
 }
 animate();
