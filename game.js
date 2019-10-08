@@ -23,9 +23,24 @@ PIXI.SCALE_MODES.DEFAULT = PIXI.SCALE_MODES.NEAREST;
 
 PIXI.loader
   .add("assets.json")
+  .add("MainMusic.wav")
+  .add("Pickup_Coin.wav")
+  .add("Left_Foot.wav")
+  .add("Right_Foot.wav")
   .load(ready);
+  
+
 
 function ready() {
+	
+  music = PIXI.audioManager.getAudio("MainMusic.wav");
+  music.loop = true;
+  music.play();
+  
+  coinUp = PIXI.audioManager.getAudio("Pickup_Coin.wav");
+  
+  leftFoot = PIXI.audioManager.getAudio("Left_Foot.wav");
+  rightFoot = PIXI.audioManager.getAudio("Right_Foot.wav");
 	
   ball = new PIXI.Sprite(PIXI.Texture.fromImage("ball.png"));
   ball.position.y = Math.floor(Math.random() * 300) + 50;
@@ -66,6 +81,8 @@ function keydownEventHandler(e)
 	{
 		stage.removeChild(standing);
 		stage.addChild(runner);
+		leftFoot.play();
+		rightFoot.play();
 		lastVertDir = "Up";
 		if(contain(runner, {x:50, y:20, width: 490, height:490}) == "top")
 		{
@@ -89,6 +106,8 @@ function keydownEventHandler(e)
 	{
 		stage.removeChild(standing);
 		stage.addChild(runner);
+		leftFoot.play();
+		rightFoot.play();
 		lastVertDir = "Down";
 		if(contain(runner, {x:32, y:32, width: 490, height:490}) == "bottom")
 		{
@@ -112,7 +131,9 @@ function keydownEventHandler(e)
 	{
 		runner.scale.x = -2;
 		stage.removeChild(standing);
-		stage.addChild(runner);
+		stage.addChild(runner);		
+		leftFoot.play();
+		rightFoot.play();
 		lastHorizDir = "Left";
 		if(contain(runner, {x:50, y:32, width: 490, height:490}) == "left")
 		{
@@ -137,6 +158,8 @@ function keydownEventHandler(e)
 		runner.scale.x = 2;	
 		stage.removeChild(standing);
 		stage.addChild(runner);
+		leftFoot.play();
+		rightFoot.play();
 		lastHorizDir = "Right";
 		if(contain(runner, {x:32, y:32, width: 540, height:490}) == "right")
 		{
@@ -174,6 +197,7 @@ function collision(a, b)
   {
 	if(ballReady == 1)
 	{
+		coinUp.play();
 		count+=1;
 		ballReady = 0;
 		text.text = 'Score: ' + count
