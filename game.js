@@ -1,15 +1,29 @@
-var gameport = document.getElementById("gameport");
+var GAME_WIDTH = 720;
+var GAME_HEIGHT = 400;
+var GAME_SCALE = 4;
+var DIM = 16;
 
-var renderer = PIXI.autoDetectRenderer(500, 500, {backgroundColor: 0x330033});
+var gameport = document.getElementById("gameport");
+var renderer = new PIXI.autoDetectRenderer(GAME_WIDTH,
+                                           GAME_HEIGHT,
+                                           {backgroundColor: 0x99D5FF});
 gameport.appendChild(renderer.view);
 
 var stage = new PIXI.Container();
+stage.scale.x = GAME_SCALE;
+stage.scale.y = GAME_SCALE;
+
 var winner = new PIXI.Container();
+
 var lastHorizDir;
 var lastVertDir;
 var count = 0;
 var ballReady = 1;
 
+var hero;
+var runner;
+var world;
+var grass;
 
 text = new PIXI.Text('Score: ' + count,{fontFamily : 'Arial', fontSize: 24, fill : 0xff1010, align : 'center'});
 stage.addChild(text);
@@ -19,6 +33,43 @@ winningText.position.x = 250;
 winningText.position.y = 250;
 winner.addChild(winningText);
 
+// Character movement constants:
+var MOVE_LEFT = 1;
+var MOVE_RIGHT = 2;
+var MOVE_UP = 3;
+var MOVE_DOWN = 4;
+var MOVE_NONE = 0;
+
+// The move function starts or continues movement
+function move() {
+
+  if (hero.direction == MOVE_NONE) {
+    hero.moving = false;
+    return;
+  }
+
+  var dx = 0;
+  var dy = 0;
+
+  if (hero.direction == MOVE_LEFT) dx -= 1;
+  if (hero.direction == MOVE_RIGHT) dx += 1;
+  if (hero.direction == MOVE_UP) dy -= 1;  
+  if (hero.direction == MOVE_DOWN) dy += 1;
+
+  if (water[(hero.gy+dy-1)*12 + (hero.gx+dx)] != 0) {
+    hero.moving = false;
+    return;
+  }
+
+  hero.gx += dx;
+  hero.gy += dy;
+
+  hero.moving = true;
+  
+  createjs.Tween.get(hero).to({x: hero.gx*DIM, y: hero.gy*DIM}, 250).call(move);
+
+}
+
 PIXI.SCALE_MODES.DEFAULT = PIXI.SCALE_MODES.NEAREST;
 
 PIXI.loader
@@ -27,15 +78,27 @@ PIXI.loader
   .add("Pickup_Coin.wav")
   .add("Left_Foot.wav")
   .add("Right_Foot.wav")
+  .add("winner.wav")
+  .add("map.json")
+  .add("map.png")
   .load(ready);
   
 
 
 function ready() {
 	
+  createjs.Ticker.setFPS(60);
+  
+  var tu = new TileUtilites(PIXI);
+  world = tu.makeTileWorld("map.json", "map.png");
+  stage.addChild(world);
+	
   music = PIXI.audioManager.getAudio("MainMusic.wav");
   music.loop = true;
   music.play();
+  
+  winMusic = PIXI.audioManager.getAudio("winner.wav");
+  winMusic.loop = true;
   
   coinUp = PIXI.audioManager.getAudio("Pickup_Coin.wav");
   
@@ -47,13 +110,20 @@ function ready() {
   ball.position.x = Math.floor(Math.random() * 300) + 50;
   stage.addChild(ball);
 	
-  standing = new PIXI.Sprite(PIXI.Texture.fromFrame("MyDude2.png"));
-  standing.scale.x = 2;
-  standing.scale.y = 2;
-  standing.position.x = 200;
-  standing.position.y = 200;
-  standing.anchor.x = .5;
-  stage.addChild(standing);
+  hero = new PIXI.Sprite(PIXI.Texture.fromFrame("MyDude2.png"));
+  hero.gx = 9;
+  hero.gy = 5;
+  hero.x = hero.gx*DIM;
+  hero.y = hero.gy*DIM;
+  hero.anchor.x = 0.0;
+  hero.anchor.y = 1.0;
+  
+  /*hero.scale.x = 2;
+  hero.scale.y = 2;
+  hero.position.x = 200;
+  hero.position.y = 200;
+  hero.anchor.x = .5;
+  stage.addChild(hero);
   
   var frames = [];
 
@@ -62,13 +132,25 @@ function ready() {
   }
 
   runner = new PIXI.extras.MovieClip(frames);
+  runner.gx = 9;
+  runner.gy = 5;
+  runner.x = runner.gx*DIM;
+  runner.y = runner.gy*DIM;
+  runner.anchor.x = 0.0;
+  runner.anchor.y = 1.0;
+  
   runner.scale.x = 2;
   runner.scale.y = 2;
   runner.position.x = 200;
   runner.position.y = 200;
   runner.anchor.x = .5;
   runner.animationSpeed = 0.1;
-  runner.play();
+  runner.play();*/
+  
+  var entities = world.getObject("Entities");
+  entities.addChild(hero);
+  
+  grass = world.getObject("Grass").data;
   
   
   document.addEventListener('keydown', keydownEventHandler);
@@ -77,9 +159,27 @@ function ready() {
 
 function keydownEventHandler(e)
 {
+  e.preventDefault();
+  if (!hero) return;
+  if (hero.moving) return;
+  
+  hero.direction = MOVE_NONE;
+
+  if (e.keyCode == 87)
+    hero.direction = MOVE_UP;
+  else if (e.keyCode == 83)
+    hero.direction = MOVE_DOWN;
+  else if (e.keyCode == 65)
+    hero.direction = MOVE_LEFT;
+  else if (e.keyCode == 68)
+    hero.direction = MOVE_RIGHT;
+
+  move();
+}
+/*{
 	if (e.keyCode == 87) // W Key
 	{
-		stage.removeChild(standing);
+		stage.removeChild(hero);
 		stage.addChild(runner);
 		leftFoot.play();
 		rightFoot.play();
@@ -104,7 +204,7 @@ function keydownEventHandler(e)
 	
 	if(e.keyCode == 83) // S Key
 	{
-		stage.removeChild(standing);
+		stage.removeChild(hero);
 		stage.addChild(runner);
 		leftFoot.play();
 		rightFoot.play();
@@ -130,7 +230,7 @@ function keydownEventHandler(e)
 	if(e.keyCode == 65) // A Key
 	{
 		runner.scale.x = -2;
-		stage.removeChild(standing);
+		stage.removeChild(hero);
 		stage.addChild(runner);		
 		leftFoot.play();
 		rightFoot.play();
@@ -156,7 +256,7 @@ function keydownEventHandler(e)
 	if(e.keyCode == 68) // D Key
 	{
 		runner.scale.x = 2;	
-		stage.removeChild(standing);
+		stage.removeChild(hero);
 		stage.addChild(runner);
 		leftFoot.play();
 		rightFoot.play();
@@ -178,14 +278,14 @@ function keydownEventHandler(e)
 		}
 		collision(runner, ball);
 	}
-}
+}*/
 	
 function keyupEventHandler(e)
 {
-	standing.position.x = runner.position.x;
-	standing.position.y = runner.position.y;
-	standing.scale.x = runner.scale.x;
-	stage.addChild(standing);
+	hero.position.x = runner.position.x;
+	hero.position.y = runner.position.y;
+	hero.scale.x = runner.scale.x;
+	stage.addChild(hero);
 	stage.removeChild(runner);
 }
 
@@ -201,8 +301,8 @@ function collision(a, b)
 		count+=1;
 		ballReady = 0;
 		text.text = 'Score: ' + count
-		var new_x = Math.floor(Math.random() * 400) + 50;
-		var new_y = Math.floor(Math.random() * 400) + 50;
+		var new_x = Math.floor(Math.random() * GAME_HEIGHT - 100) + 50;
+		var new_y = Math.floor(Math.random() * GAME_WIDTH - 100) + 50;
 		createjs.Tween.get(ball.position).to({x: new_x, y: new_y}, 500, createjs.Ease.easeOutInCirc).call(tweenComplete);
 	}
   }
@@ -247,6 +347,20 @@ function contain(sprite, container) {
 
 function animate() {
   requestAnimationFrame(animate);
-  renderer.render(stage);
+  
+  if(count < 10)
+  {
+	  renderer.render(stage);
+  }
+  else
+  {
+	  music.stop();
+	  renderer.render(winner);
+	  winMusic.play();
+  }
 }
-animate();
+
+function start() {
+	renderer.render(menu);
+}
+start();
