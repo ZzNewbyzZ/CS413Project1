@@ -27,32 +27,31 @@
         }, 
         {
          "draworder":"topdown",
-         "id":2,
-         "name":"Object",
+         "height":12,
+         "name":"Entities",
          "objects":[
                 {
                  "gid":5,
                  "height":16,
-                 "id":2,
-                 "name":"Hero",
+                 "id":1,
+                 "name":"hero",
                  "rotation":0,
                  "type":"",
                  "visible":true,
                  "width":16,
-                 "x":32.3333333333333,
-                 "y":79.6666666666667
+                 "x":32,
+                 "y":80
                 }],
          "opacity":1,
          "type":"objectgroup",
          "visible":true,
+         "width":12,
          "x":0,
          "y":0
         }],
- "nextlayerid":7,
- "nextobjectid":3,
+ "nextobjectid":2,
  "orientation":"orthogonal",
  "renderorder":"right-down",
- "tiledversion":"1.2.5",
  "tileheight":16,
  "tilesets":[
         {
@@ -66,43 +65,44 @@
          "spacing":2,
          "tilecount":4,
          "tileheight":16,
-         "tiles":[
+         "tileproperties":
+            {
+             "0":
                 {
-                 "id":0,
-                 "properties":[
-                        {
-                         "name":"name",
-                         "type":"string",
-                         "value":"Grass"
-                        }]
-                }, 
+                 "name":"slate"
+                },
+             "1":
                 {
-                 "id":1,
-                 "properties":[
-                        {
-                         "name":"name",
-                         "type":"string",
-                         "value":"Water"
-                        }]
-                }, 
+                 "name":"water"
+                },
+             "2":
                 {
-                 "id":2,
-                 "properties":[
-                        {
-                         "name":"name",
-                         "type":"string",
-                         "value":"Sand"
-                        }]
-                }, 
+                 "name":"grass"
+                },
+             "3":
                 {
-                 "id":3,
-                 "properties":[
-                        {
-                         "name":"name",
-                         "type":"string",
-                         "value":"Ice"
-                        }]
-                }],
+                 "name":"sand"
+                }
+            },
+         "tilepropertytypes":
+            {
+             "0":
+                {
+                 "name":"string"
+                },
+             "1":
+                {
+                 "name":"string"
+                },
+             "2":
+                {
+                 "name":"string"
+                },
+             "3":
+                {
+                 "name":"string"
+                }
+            },
          "tilewidth":16
         }, 
         {
@@ -119,7 +119,6 @@
          "tilewidth":16
         }],
  "tilewidth":16,
- "type":"map",
- "version":1.2,
+ "version":1,
  "width":12
 }
